@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Secure Vault Pro | Portfolio Project</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f0f2f1;
+            --surface: #ffffff;
+            --surface2: #f9fafb;
+            --text: #1a1f2e;
+            --text2: #6b7280;
+            --accent: #ff9900;
+            --accent-dim: #ff990018;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        [data-theme='dark'] {
+            --bg: #0f1117;
+            --surface: #1c1f2a;
+            --surface2: #252836;
+            --text: #f1f5f9;
+            --text2: #94a3b8;
+            --border: #2e3347;
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px 16px;
+            transition: 0.3s;
+        }
+
+        .container { max-width: 860px; margin: auto; }
+
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .header-left h1 { font-family: 'Space Mono', monospace; font-size: 1.6rem; }
+        .header-left h1 span { color: var(--accent); }
+        .theme-btn {
+            background: none; border: 1.5px solid var(--border); color: var(--text2);
+            padding: 7px 16px; border-radius: 20px; cursor: pointer; transition: 0.2s;
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .upload-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .btn-upload {
+            background: var(--accent); color: #fff; border: none; padding: 10px 24px;
+            border-radius: 8px; cursor: pointer; font-weight: 600;
+        }
+
+        /* File List */
+        .file-card {
+            background: var(--surface); border: 1.5px solid var(--border);
+            padding: 16px 18px; margin-bottom: 10px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.2s;
+        }
+        .file-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+        .tag {
+            background: var(--accent-dim); color: var(--accent);
+            padding: 3px 10px; border-radius: 20px; font-size: 0.72rem;
+            font-weight: 600; text-transform: uppercase; margin-right: 5px;
+        }
+
+        .btn-del {
+            background: transparent; color: var(--danger); border: 1.5px solid var(--danger);
+            padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.78rem;
+        }
+        .btn-del:hover { background: var(--danger); color: white; }
+
+        .spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <h1>AI Secure <span>Vault</span> Pro</h1>
+            <p>AWS Portfolio Project by Sajith Rathnayaka</p>
+        </div>
+        <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
+    </div>
+
+    <div class="card">
+        <div class="upload-row">
+            <input type="file" id="fileInput" accept="image/*">
+            <button class="btn-upload" onclick="uploadFile()">Upload to Vault</button>
+        </div>
+        <div id="status" style="margin-top:10px; font-size:0.8rem; color:var(--text2);"></div>
+    </div>
+
+    <div id="file-list">
+        <p style="text-align:center; padding:40px; color:var(--text2);">Loading Vault contents...</p>
+    </div>
+</div>
+
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1500.0.min.js"></script>
+<script>
+    // --- AWS CONFIGURATION (PLACEHOLDERS FOR GITHUB) ---
+    const CONFIG = {
+        accessKeyId: 'REPLACE_WITH_YOUR_KEY',
+        secretAccessKey: 'REPLACE_WITH_YOUR_SECRET',
+        region: 'us-east-1',
+        apiBaseUrl: 'https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com',
+        tableName: 'FileMetadata'
+    };
+
+    AWS.config.update({
+        accessKeyId: CONFIG.accessKeyId,
+        secretAccessKey: CONFIG.secretAccessKey,
+        region: CONFIG.region
+    });
+
+    const docClient = new AWS.DynamoDB.DocumentClient();
+
+    function toggleTheme() {
+        const body = document.body;
+        const isDark = body.getAttribute('data-theme') === 'dark';
+        body.setAttribute('data-theme', isDark ? '' : 'dark');
+    }
+
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        const file = fileInput.files[0];
+        if (!file) return alert('Select a file!');
+
+        status.innerHTML = '<span class="spinner"></span> Requesting Presigned URL...';
+
+        try {
+            const res = await fetch(`${CONFIG.apiBaseUrl}/get-url`, {
+                method: 'POST',
+                body: JSON.stringify({ fileName: file.name, fileType: file.type })
+            });
+            const { uploadUrl } = await res.json();
+
+            status.innerHTML = '<span class="spinner"></span> Uploading to S3...';
+            await fetch(uploadUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': file.type },
+                body: file
+            });
+
+            status.textContent = '✅ Success! Processing AI tags...';
+            setTimeout(() => location.reload(), 3000);
+        } catch (e) {
+            status.textContent = '❌ Error during upload.';
+        }
+    }
+
+    async function deleteFile(fileID) {
+        if (!confirm('Delete this record?')) return;
+        try {
+            await fetch(`${CONFIG.apiBaseUrl}/delete`, {
+                method: 'POST',
+                body: JSON.stringify({ FileID: fileID })
+            });
+            location.reload();
+        } catch (e) {
+            alert('Delete failed.');
+        }
+    }
+
+    function fetchFiles() {
+        docClient.scan({ TableName: CONFIG.tableName }, function(err, data) {
+            const list = document.getElementById('file-list');
+            if (err) {
+                list.innerHTML = `<p>Error connecting to DynamoDB: ${err.message}</p>`;
+                return;
+            }
+            list.innerHTML = '';
+            data.Items.forEach(item => {
+                const tags = (item.Labels || []).map(t => `<span class="tag">${t}</span>`).join('');
+                const card = document.createElement('div');
+                card.className = 'file-card';
+                card.innerHTML = `
+                    <div style="flex:1">
+                        <strong style="font-family:'Space Mono'">${item.FileID}</strong><br>
+                        <div style="margin-top:8px">${tags}</div>
+                    </div>
+                    <button class="btn-del" onclick="deleteFile('${item.FileID}')">🗑 Delete</button>
+                `;
+                list.appendChild(card);
+            });
+        });
+    }
+
+    fetchFiles();
+</script>
+</body>
+</html>
