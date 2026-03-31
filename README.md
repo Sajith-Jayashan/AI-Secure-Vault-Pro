@@ -13,6 +13,22 @@ An end-to-end serverless cloud application built on AWS that uses AI to automati
 - **Languages**: HTML5, CSS3, JavaScript, Python (Boto3)
 - **AWS Services**: S3, Lambda, API Gateway, DynamoDB, Rekognition,CloudFront
 
+**Lambda Function Overview**
+<img width="816" height="341" alt="image" src="https://github.com/user-attachments/assets/c93ab54e-c35f-431e-8254-7c2849cca760" />
+
+**DynamoDB database table**
+
+<img width="560" height="284" alt="image" src="https://github.com/user-attachments/assets/c3efceea-bb4c-4718-9f26-de52f3fda8cc" />
+
+**API Gateway Routes**
+
+<img width="536" height="222" alt="image" src="https://github.com/user-attachments/assets/a18a6f03-122f-49c8-a84e-71f4f6cc2b08" />
+
+**CloudFront distribution**
+
+<img width="762" height="203" alt="image" src="https://github.com/user-attachments/assets/6ecba862-ff5a-476d-a5e2-53af2f7aa107" />
+
+
 ## Security
 This project follows the **AWS Well-Architected Framework** by:
 - Using **Least Privilege** IAM roles.
