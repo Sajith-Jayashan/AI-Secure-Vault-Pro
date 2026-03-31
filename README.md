@@ -1,4 +1,5 @@
 # AI secure vault pro
+<img width="1293" height="649" alt="image" src="https://github.com/user-attachments/assets/331fe475-3775-43de-a4a6-0d529a89941d" />
 
 An end-to-end serverless cloud application built on AWS that uses AI to automatically categorize and secure uploaded images.
 
