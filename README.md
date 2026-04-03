@@ -20,10 +20,6 @@ An end-to-end serverless cloud application built on AWS that uses AI to automati
 
 <img width="560" height="284" alt="image" src="https://github.com/user-attachments/assets/c3efceea-bb4c-4718-9f26-de52f3fda8cc" />
 
-**CloudFront distribution**
-
-<img width="762" height="203" alt="image" src="https://github.com/user-attachments/assets/6ecba862-ff5a-476d-a5e2-53af2f7aa107" />
-
 
 ## Security
 This project follows the **AWS Well-Architected Framework** by:
